@@ -3,6 +3,114 @@ title: "Codigo IO"
 output: html_document
 ---
 
+### Librerias
+
+```{r}
+install.packages("tidyverse")
+install.packages("stats")
+install.packages("rtweet")
+install.packages("igraph")
+install.packages("leaflet")
+install.packages("syuzhet")
+install.packages("rvest")
+install.packages("wordcloud")
+install.packages("tm")
+install.packages("quantmod")
+install.packages("rgdal")
+install.packages("stargazer")
+install.packages("olsrr")
+install.packages("nlme")
+install.packages("gmodels")
+install.packages("psych")
+install.packages("gt")
+install.packages("GPArotation")
+install.packages("ltm")
+install.packages("nFactors")
+install.packages("skimr")
+install.packages("ggrepel")
+install.packages("waffle")
+install.packages("readxl")
+install.packages("remotes")
+install.packages("ggpubr")
+install.packages("lm.beta")
+install.packages("survey")
+install.packages("tinytex")
+tinytex::install_tinytex()
+tinytex:::is_tinytex()
+install.packages("srvyr")
+install.packages("sjstats")
+install.packages("ggannotate")
+install.packages("paletteer")
+install.packages("openxlsx")
+install.packages("packrat")
+install.packages("rsconnect")
+```
+
+
+
 ### Limpieza variables
 
-Hola
+
+#### Pasar variable numérica a factor (poniendo nombre a los factores)
+
+```{r}
+options(OutDec= ",")
+cars<- force(mtcars)
+cars$cyl <- factor(cars$cyl,
+                   levels = c(4,6,8),
+                    labels = c("Cuatro", "Seis", "Ocho")) 
+cars
+```
+
+
+
+
+#### Agrupar y crear medias y medianas
+
+```{r}
+options(OutDec= ",")
+library(tidyverse)
+cars <- force(mtcars)
+
+cars %>% group_by(vs) %>% summarise(media=mean(disp), mediana=median(disp), maximo=max(disp), minimo=min(disp))
+```
+
+
+#### Pivotar (Pendiente)
+
+
+
+
+### Descriptivos
+
+
+#### Tabla cruzada básica 
+
+```{r}
+options(OutDec= ",")
+library("gmodels")
+cars <- force(mtcars)
+CrossTable(cars$vs, cars$am)
+```
+
+
+
+### Tabla cruzada detallada (como tabla dinamica de excel). Básica.
+
+```{r}
+options(OutDec= ",")
+library(gt)
+example <- read_csv("https://raw.githubusercontent.com/jdjohn215/2020-RStudio-Table-Contest/master/data/income_by_sex_and_age.csv")
+example %>% group_by(OCC2010, SEX) %>% summarise(wage=mean(median_wage)) %>% ungroup() %>% 
+  #para suma sum(), mediana median(), recuento crear nueva variable =1
+  pivot_wider(names_from = c(SEX), values_from=wage) %>% gt(rowname_col = "OCC2010") %>%
+  tab_options(container.height = px(500)) %>% fmt_currency(columns = c(2,3), decimals = 0, currency="euro", sep_mark=".") %>% 
+  tab_header(title="Título", subtitle = "Subtítulo") %>%
+  tab_stubhead("Trabajo") %>%
+  tab_options(heading.title.font.size = 24,
+              heading.title.font.weight = "bolder",
+              column_labels.font.weight = "bold")
+
+?fmt_currency
+```
+
