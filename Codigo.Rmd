@@ -95,7 +95,7 @@ CrossTable(cars$vs, cars$am)
 
 
 
-### Tabla cruzada detallada (como tabla dinamica de excel). Básica.
+### Tabla cruzada detallada (como tabla dinamica de excel). Básica. https://rpubs.com/jdjohn215/three-way-crosstab-table-with-gt
 
 ```{r}
 options(OutDec= ",")
@@ -103,14 +103,24 @@ library(gt)
 example <- read_csv("https://raw.githubusercontent.com/jdjohn215/2020-RStudio-Table-Contest/master/data/income_by_sex_and_age.csv")
 example %>% group_by(OCC2010, SEX) %>% summarise(wage=mean(median_wage)) %>% ungroup() %>% 
   #para suma sum(), mediana median(), recuento crear nueva variable =1
-  pivot_wider(names_from = c(SEX), values_from=wage) %>% gt(rowname_col = "OCC2010") %>%
-  tab_options(container.height = px(500)) %>% fmt_currency(columns = c(2,3), decimals = 0, currency="euro", sep_mark=".") %>% 
+  pivot_wider(names_from = c(SEX), values_from=wage) %>%
+  rename("Hombre"="Male", "Mujer"="Female") %>% mutate(Diferencia=Hombre-Mujer) %>%
+  arrange(desc(Diferencia)) %>% gt(rowname_col = "OCC2010") %>%
+  tab_options(container.height = px(500)) %>% fmt_currency(columns = c(2:4), decimals = 0, currency="euro", sep_mark=".") %>% 
   tab_header(title="Título", subtitle = "Subtítulo") %>%
   tab_stubhead("Trabajo") %>%
   tab_options(heading.title.font.size = 24,
               heading.title.font.weight = "bolder",
-              column_labels.font.weight = "bold")
+              column_labels.font.weight = "bold") %>% 
+  tab_source_note(md("**Fuente:** Poner fuente aquí")) %>% 
+  tab_footnote(footnote = "First footnote", locations = cells_stubhead()) %>% 
+  tab_footnote(footnote="Second footnote", locations=cells_column_labels("Hombre")) %>% 
+  data_color(columns = vars(Diferencia),
+             colors = scales::col_numeric(
+               palette = as.character(paletteer::paletteer_d(palette = "RColorBrewer::Reds")),
+               domain = NULL))
 
-?fmt_currency
 ```
 
+
+### Tabla cruzada básica con porcentajes
