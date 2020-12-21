@@ -79,7 +79,7 @@ cars %>% group_by(vs) %>% summarise(media=mean(disp), mediana=median(disp), maxi
 #### Pivotar (Pendiente)
 
 
-
+PUT RELOCATE THROUGH CONTAINS TOO
 
 ### Descriptivos
 
@@ -103,7 +103,7 @@ CrossTable(cars$vs, cars$am)
 
 
 
-### Tabla cruzada para informe (como tabla dinamica de excel). Básica. https://rpubs.com/jdjohn215/three-way-crosstab-table-with-gt
+### Tabla cruzada para informe con media/mediana/max/min. Básica. https://rpubs.com/jdjohn215/three-way-crosstab-table-with-gt
 
 ```{r}
 options(OutDec= ",")
@@ -147,6 +147,39 @@ growth %>% mutate(tot=1) %>% group_by(group) %>% summarise(porc=sum(tot)/30) %>%
   tab_source_note(md("**Fuente:** Poner fuente aquí")) %>% 
   tab_footnote(footnote = "First footnote", locations = cells_stubhead()) %>% 
   fmt_percent(columns=c(2), dec_mark = ",")
+```
+
+
+### Tabla cruzada para informe con media/mediana/max/min. Compleja. https://rpubs.com/jdjohn215/three-way-crosstab-table-with-gt
+
+
+```{r}
+options(OutDec= ",")
+library(gt)
+library(tidyverse)
+example <- read.csv("https://raw.githubusercontent.com/jdjohn215/2020-RStudio-Table-Contest/master/data/income_by_sex_and_age.csv")
+example %>%  pivot_wider(names_from = c(SEX), values_from=median_wage) %>% mutate(Diferencia=Male-Female) %>% 
+  rename("Hombre"="Male", "Mujer"="Female") %>% 
+  pivot_wider(names_from = c(age_category), values_from=c(Hombre, Mujer, Diferencia),
+              names_glue = "{age_category}_{.value}") %>% 
+  relocate(OCC2010, contains("Under"), contains("35 to"), contains("plus")) %>% 
+  gt(rowname_col = "OCC2010", groupname_col = "variable") %>% 
+  tab_options(container.height = px(500)) %>%  tab_header(title="Título", subtitle = "Subtítulo") %>% 
+  tab_stubhead("OCC2010") %>% 
+  tab_spanner_delim(delim = "_") %>% 
+  tab_options(heading.title.font.size = 24,
+              heading.title.font.weight = "bolder",
+              column_labels.font.weight = "bold",
+              row_group.font.weight = "bold") %>% 
+  tab_source_note(md("**Fuente:** Poner fuente aquí")) %>% 
+  tab_footnote(footnote = "Primera nota a pie de página", locations = cells_stubhead()) %>% 
+  fmt_currency(columns = c(2:10), decimals = 0, currency="euro", sep_mark=".") %>% 
+  data_color(columns = c(contains("Diferencia")),
+             colors = scales::col_numeric(
+               palette = as.character(paletteer::paletteer_d(palette = "RColorBrewer::Reds")),
+               domain = NULL))
+
+?pivot_wider
 ```
 
 
