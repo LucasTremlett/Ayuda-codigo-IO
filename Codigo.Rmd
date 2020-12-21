@@ -137,6 +137,7 @@ example %>% group_by(OCC2010, SEX) %>% summarise(wage=mean(median_wage)) %>% ung
 options(OutDec= ",")
 library(gt)
 library(tidyverse)
+library(gmodels)
 growth <- force(PlantGrowth)
 growth %>% mutate(tot=1) %>% group_by(group) %>% summarise(porc=sum(tot)/30) %>% ungroup() %>% gt(rowname_col = "group") %>%
   tab_options(container.height = px(500)) %>%  tab_header(title="Título", subtitle = "Subtítulo") %>%
