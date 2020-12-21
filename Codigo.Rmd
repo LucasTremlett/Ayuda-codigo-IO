@@ -84,6 +84,14 @@ cars %>% group_by(vs) %>% summarise(media=mean(disp), mediana=median(disp), maxi
 ### Descriptivos
 
 
+### Tabla con porcentajes de una variable
+
+```{r}
+growth <- force(PlantGrowth)
+prop.table(table(growth$group))
+```
+
+
 #### Tabla cruzada básica 
 
 ```{r}
@@ -95,14 +103,14 @@ CrossTable(cars$vs, cars$am)
 
 
 
-### Tabla cruzada detallada (como tabla dinamica de excel). Básica. https://rpubs.com/jdjohn215/three-way-crosstab-table-with-gt
+### Tabla cruzada para informe (como tabla dinamica de excel). Básica. https://rpubs.com/jdjohn215/three-way-crosstab-table-with-gt
 
 ```{r}
 options(OutDec= ",")
 library(gt)
-example <- read_csv("https://raw.githubusercontent.com/jdjohn215/2020-RStudio-Table-Contest/master/data/income_by_sex_and_age.csv")
-example %>% group_by(OCC2010, SEX) %>% summarise(wage=mean(median_wage)) %>% ungroup() %>% 
-  #para suma sum(), mediana median(), recuento crear nueva variable =1
+library(tidyverse)
+example <- read.csv("https://raw.githubusercontent.com/jdjohn215/2020-RStudio-Table-Contest/master/data/income_by_sex_and_age.csv")
+example %>% group_by(OCC2010, SEX) %>% summarise(wage=mean(median_wage)) %>% ungroup() %>%
   pivot_wider(names_from = c(SEX), values_from=wage) %>%
   rename("Hombre"="Male", "Mujer"="Female") %>% mutate(Diferencia=Hombre-Mujer) %>%
   arrange(desc(Diferencia)) %>% gt(rowname_col = "OCC2010") %>%
@@ -123,4 +131,50 @@ example %>% group_by(OCC2010, SEX) %>% summarise(wage=mean(median_wage)) %>% ung
 ```
 
 
-### Tabla cruzada básica con porcentajes
+### Tabla cruzada para informes con porcentajes. Básica. 
+
+```{r}
+options(OutDec= ",")
+library(gt)
+library(tidyverse)
+growth <- force(PlantGrowth)
+growth %>% mutate(tot=1) %>% group_by(group) %>% summarise(porc=sum(tot)/30) %>% ungroup() %>% gt(rowname_col = "group") %>%
+  tab_options(container.height = px(500)) %>%  tab_header(title="Título", subtitle = "Subtítulo") %>%
+  tab_stubhead("group") %>% 
+  tab_options(heading.title.font.size = 24,
+              heading.title.font.weight = "bolder",
+              column_labels.font.weight = "bold") %>% 
+  tab_source_note(md("**Fuente:** Poner fuente aquí")) %>% 
+  tab_footnote(footnote = "First footnote", locations = cells_stubhead()) %>% 
+  fmt_percent(columns=c(2), dec_mark = ",")
+```
+
+
+### Tabla cruzada para informes con porcentajes. Compleja. 
+
+```{r}
+library("datasets")
+library("gt")
+library("tidyverse")
+cancerdata<- force(esoph)
+cancerdata %>% group_by(agegp) %>% summarise(tot.cont=sum(ncontrols), tot.cases=sum(ncases)) %>% 
+  mutate(porc.cont= prop.table(tot.cont), porc.cases= prop.table(tot.cases), variable="Edad") %>%  rename("factor"="agegp") %>% 
+  rbind(cancerdata %>% group_by(alcgp) %>% summarise(tot.cont=sum(ncontrols), tot.cases=sum(ncases)) %>% 
+  mutate(porc.cont= prop.table(tot.cont), porc.cases= prop.table(tot.cases), variable="Alcohol") %>% rename("factor"="alcgp")) %>% 
+  rbind(cancerdata %>% group_by(tobgp) %>% summarise(tot.cont=sum(ncontrols), tot.cases=sum(ncases)) %>% 
+  mutate(porc.cont= prop.table(tot.cont), porc.cases= prop.table(tot.cases), variable="Tabaco") %>% rename("factor"="tobgp")) %>%
+  relocate(variable, factor, tot.cont, porc.cont, tot.cases, porc.cases) %>% 
+  gt(rowname_col = "factor", groupname_col = "variable") %>% 
+  tab_options(container.height = px(500)) %>%  tab_header(title="Título", subtitle = "Subtítulo") %>% 
+  tab_options(heading.title.font.size = 24,
+              heading.title.font.weight = "bolder",
+              column_labels.font.weight = "bold",
+              row_group.font.weight = "bold") %>% 
+  tab_source_note(md("**Fuente:** Poner fuente aquí")) %>% 
+  tab_footnote(footnote = "Primera nota a pie de página", locations = cells_column_labels("tot.cont")) %>% 
+  fmt_percent(columns=c(4,6), dec_mark = ",") %>% 
+  tab_spanner(label = "Controles", columns=vars("tot.cont", "porc.cont")) %>% 
+  tab_spanner(label="Casos", columns=vars("tot.cases", "porc.cases")) %>% 
+  cols_label(tot.cont="Total", porc.cont="Porcentaje", tot.cases="Total", porc.cases="Porcentaje")
+```
+
