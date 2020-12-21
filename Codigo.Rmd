@@ -212,3 +212,76 @@ cancerdata %>% group_by(agegp) %>% summarise(tot.cont=sum(ncontrols), tot.cases=
   cols_label(tot.cont="Total", porc.cont="Porcentaje", tot.cases="Total", porc.cases="Porcentaje")
 ```
 
+
+
+
+## Analisis estadistico
+
+
+### Regresion lineal
+
+```{r}
+library(stats)
+options(OutDec= ",")
+cars <- force(mtcars)
+cars$cyl <- factor(cars$cyl,
+                   levels = c(4,6,8),
+                    labels = c("Cuatro", "Seis", "Ocho"))
+reg<-lm(mpg ~ cyl + disp + hp + 
+               drat + wt, data=cars)
+summary(reg)
+```
+
+
+### Regresion logistica
+
+```{r}
+library(stats)
+options(OutDec= ",")
+cars <- force(mtcars)
+cars$cyl <- factor(cars$cyl,
+                   levels = c(4,6,8),
+                    labels = c("Cuatro", "Seis", "Ocho"))
+reg<-glm(vs ~ cyl + disp + hp + 
+               drat + wt, data = cars, family = "binomial")
+summary(reg)
+```
+
+
+### Tabla stargazer para HTML
+
+```{css, echo = FALSE}
+
+table, td, th {
+  border: none;
+  padding-left: 4em;
+  padding-right: 4em;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 4em;
+  margin-bottom: 4em;
+}
+
+```
+
+```{r, results="asis", message=FALSE}
+library(stargazer)
+library(stats)
+options(OutDec= ",")
+cars <- force(mtcars)
+cars$cyl <- factor(cars$cyl,
+                   levels = c(4,6,8),
+                    labels = c("Cuatro", "Seis", "Ocho"))
+reg<-lm(mpg ~ cyl + disp + hp + 
+               drat + wt, data=cars)
+stargazer(reg, 
+          type="text",
+          star.cutoffs=c(0.05, 0.01, 0.001), header=FALSE, 
+          intercept.top = TRUE,
+          intercept.bottom = FALSE,  column.sep.width = "1pt", omit.stat=c("f", "ser"),  
+          dep.var.labels = "Variable dependiente",
+          covariate.labels = c("Intercepto" ,"Variable dummy 1", "Variable dummy 2", "Variable independiente 2", 
+                               "Variable independiente 3",
+                               "Variable independiente 4", "Variable independiente 5"))
+```
+
