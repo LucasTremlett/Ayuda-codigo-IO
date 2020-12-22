@@ -250,6 +250,7 @@ summary(reg)
 
 ### Tabla stargazer para HTML
 
+
 ```{css, echo = FALSE}
 
 table, td, th {
@@ -259,29 +260,32 @@ table, td, th {
   margin-left: auto;
   margin-right: auto;
   margin-top: 4em;
-  margin-bottom: 4em;
+  margin-bottom:4em;
 }
 
 ```
 
-```{r, results="asis", message=FALSE}
+```{r, results="asis", message=FALSE, echo=FALSE}
 library(stargazer)
 library(stats)
-options(OutDec= ",")
 cars <- force(mtcars)
 cars$cyl <- factor(cars$cyl,
                    levels = c(4,6,8),
                     labels = c("Cuatro", "Seis", "Ocho"))
-reg<-lm(mpg ~ cyl + disp + hp + 
+reg1<-lm(mpg ~ cyl,  data=cars)
+
+reg2<-lm(mpg ~ cyl + disp + hp , data=cars)
+
+reg3<-lm(mpg ~ cyl + disp + hp + 
                drat + wt, data=cars)
-stargazer(reg, 
-          type="text",
-          star.cutoffs=c(0.05, 0.01, 0.001), header=FALSE, 
-          intercept.top = TRUE,
-          intercept.bottom = FALSE,  column.sep.width = "1pt", omit.stat=c("f", "ser"),  
-          dep.var.labels = "Variable dependiente",
-          covariate.labels = c("Intercepto" ,"Variable dummy 1", "Variable dummy 2", "Variable independiente 2", 
-                               "Variable independiente 3",
-                               "Variable independiente 4", "Variable independiente 5"))
+stargazer(reg1, reg2, reg3, 
+          type="html",
+          star.cutoffs=c(0.05, 0.01, 0.001), header=FALSE, decimal.mark = ",", 
+          intercept.top = TRUE, dep.var.labels.include = FALSE, dep.var.caption = "", font.size = "Huge",
+          intercept.bottom = FALSE,  column.sep.width = "0.25pt", omit.stat=c("f", "ser"), single.row=TRUE,
+          column.labels = c("**Model 1**", "**Model 2**", "**Model 3**"),model.numbers=FALSE,
+          covariate.labels = c("**Intercepto**" ,"**Variable dummy 1**", "**Variable dummy 2**", "**Variable independiente 2**", 
+                               "**Variable independiente 3**",
+                               "**Variable independiente 4**", "**Variable independiente 5**"))
 ```
 
