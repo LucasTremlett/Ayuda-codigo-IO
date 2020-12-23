@@ -47,6 +47,7 @@ install.packages("rsconnect")
 install.packages("glue")
 install.packages("modelsummary")
 install.packages("flextable")
+install.packages("datarium")
 ```
 
 
@@ -372,4 +373,160 @@ msummary(list(reg1, reg2, reg3), fmt = '%.2f', output="gt",
 ```
 
 
-### T-test (one sample)
+### T-test (paired samples). Tabla con un solo test.
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+library(rstatix)
+library(stats)
+library(tidyverse)
+library(gt)
+library(flextable)
+data <- data.frame(index=c(1:150), Antes=round(rnorm(150, mean=4, sd=3),0), 
+                   Despues=round(rnorm(150, mean=6, sd=4))) %>% 
+  pivot_longer(c("Antes", "Despues"), names_to="grupo", values_to="valor")
+
+data.media1<- data %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media2<- data %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test1 <- data %>% t_test(valor ~ grupo, paired = TRUE)
+
+test1 <-test1 %>%  mutate(media1=round(data.media1$media,2), media2=round(data.media2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2) %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+test1 %>% gt() %>% cols_label(media1="Media\nFecha 1", n1="N \n Fecha 1", 
+                              media2="Media \n Fecha 2", n2="N \n Fecha 2",
+                              statistic="T de Student", p="P-Valor", sig="¿Significativo?(95%)" ) %>% 
+  tab_options(column_labels.font.weight = "bold",
+              column_labels.border.bottom.color = "black",
+              column_labels.border.top.color = "white",
+              table.border.bottom.color="white")
+
+```
+
+
+### T-test (paired samples). Tabla con varios test
+
+```{r}
+options(OutDec= ",")
+library(rstatix)
+library(stats)
+library(tidyverse)
+library(gt)
+library(flextable)
+
+## Primer test
+data <- data.frame(index=c(1:150), Antes=round(rnorm(150, mean=4, sd=3),0), 
+                   Despues=round(rnorm(150, mean=6, sd=4)),
+                   genero=sample(c("Hombre", "Mujer"), 150, replace = TRUE),
+                   edad=sample(c("Jóvenes", "Edad media", "Viejos"), 150, replace=TRUE)) %>% 
+  pivot_longer(c("Antes", "Despues"), names_to="grupo", values_to="valor")
+
+data.media1<- data %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media2<- data %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test <- data %>% t_test(valor ~ grupo, paired = TRUE)
+
+test <-test %>%  mutate(media1=round(data.media1$media,2), media2=round(data.media2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2) %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+## Segundo test
+
+data.hombre <- data %>% filter(genero=="Hombre")
+data.media.hombre1<- data.hombre %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media.hombre2<- data.hombre %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test.hombre <- data.hombre %>% t_test(valor ~ grupo, paired = TRUE)
+
+test.hombre <-test.hombre %>%  mutate(media1=round(data.media.hombre1$media,2),
+                                      media2=round(data.media.hombre2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2) %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+
+## Tercer test
+
+data.mujer <- data %>% filter(genero=="Mujer")
+data.media.mujer1<- data.mujer %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media.mujer2<- data.mujer %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test.mujer <- data.mujer %>% t_test(valor ~ grupo, paired = TRUE)
+
+test.mujer <-test.mujer %>%  mutate(media1=round(data.media.mujer1$media,2),
+                                      media2=round(data.media.mujer2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2)  %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+## Cuarto test
+
+data.joven <- data %>% filter(edad=="Jóvenes")
+data.media.joven1<- data.joven %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media.joven2<- data.joven %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test.joven <- data.joven %>% t_test(valor ~ grupo, paired = TRUE)
+
+test.joven <-test.joven %>%  mutate(media1=round(data.media.joven1$media,2),
+                                      media2=round(data.media.joven2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2)  %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+
+## Quinto test
+
+data.medio <- data %>% filter(edad=="Edad media")
+data.media.medio1<- data.medio %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media.medio2<- data.medio %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test.medio <- data.medio %>% t_test(valor ~ grupo, paired = TRUE)
+
+test.medio <-test.medio %>%  mutate(media1=round(data.media.medio1$media,2),
+                                      media2=round(data.media.medio2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2)  %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+## Sexto test
+
+data.viejo <- data %>% filter(edad=="Viejos")
+data.media.viejo1<- data.viejo %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Antes")
+data.media.viejo2<- data.viejo %>% group_by(grupo) %>% summarise(media=mean(valor)) %>% filter(grupo=="Despues")
+
+test.viejo <- data.viejo %>% t_test(valor ~ grupo, paired = TRUE)
+
+test.viejo <-test.viejo %>%  mutate(media1=round(data.media.viejo1$media,2),
+                                      media2=round(data.media.viejo2$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df, -group1, -group2)  %>% 
+  relocate(media1, n1, media2, n2, statistic, p, sig)
+
+test.todos<- rbind(test, test.hombre, test.mujer, test.joven, test.medio, test.viejo) %>% 
+  mutate(grupo=c("Todos", "Hombres", "Mujeres", "Jóvenes", "Edad media", "Viejos")) %>% 
+  relocate(grupo, media1, n1, media2, n2, statistic, p, sig)
+
+
+
+test.todos %>% gt() %>% fmt_markdown(columns=TRUE) %>% 
+  cols_label(grupo=" ",media1="Media 1a Fecha", n1="N 1a Fecha", 
+                              media2="Media 2a Fecha", n2="N 2a Fecha",
+                              statistic="T de Student", p="P-Valor", sig="¿Significativo? (95%)" ) %>% 
+  cols_align(align="center", columns=TRUE) %>% 
+  tab_options(column_labels.font.weight = "bold",
+              column_labels.border.bottom.color = "black",
+              column_labels.border.top.color = "white",
+              table.border.bottom.color="white",
+              table_body.hlines.color = "white",
+               table_body.border.bottom.color = "white") %>% 
+  tab_style(locations = cells_body(rows = 1),
+            cell_borders(sides = "bottom", color = "#000000", style = "solid", weight = px(1))) %>% 
+  tab_style(locations = cells_body(rows = 3),
+            cell_borders(sides = "bottom", color = "#000000", style = "solid", weight = px(1)))
+
+```
+
