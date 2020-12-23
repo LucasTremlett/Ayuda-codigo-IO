@@ -44,6 +44,9 @@ install.packages("paletteer")
 install.packages("openxlsx")
 install.packages("packrat")
 install.packages("rsconnect")
+install.packages("glue")
+install.packages("modelsummary")
+install.packages("flextable")
 ```
 
 
@@ -280,7 +283,7 @@ reg3<-lm(mpg ~ cyl + disp + hp +
                drat + wt, data=cars)
 stargazer(reg1, reg2, reg3, 
           type="html",
-          star.cutoffs=c(0.05, 0.01, 0.001), header=FALSE, decimal.mark = ",", 
+          star.cutoffs=c(0.05, 0.01, 0.001), header=FALSE, decimal.mark = ",", table.layout ="c=t-s=n",
           intercept.top = TRUE, dep.var.labels.include = FALSE, dep.var.caption = "", font.size = "Huge",
           intercept.bottom = FALSE,  column.sep.width = "0.25pt", omit.stat=c("f", "ser"), single.row=TRUE,
           column.labels = c("**Model 1**", "**Model 2**", "**Model 3**"),model.numbers=FALSE,
@@ -289,3 +292,84 @@ stargazer(reg1, reg2, reg3,
                                "**Variable independiente 4**", "**Variable independiente 5**"))
 ```
 
+
+
+### Tabla stargazer para PDF
+
+```{r, results="asis", message=FALSE, echo=FALSE}
+library(stargazer)
+library(stats)
+cars <- force(mtcars)
+cars$cyl <- factor(cars$cyl,
+                   levels = c(4,6,8),
+                    labels = c("Cuatro", "Seis", "Ocho"))
+reg1<-lm(mpg ~ cyl,  data=cars)
+
+reg2<-lm(mpg ~ cyl + disp + hp , data=cars)
+
+reg3<-lm(mpg ~ cyl + disp + hp + 
+               drat + wt, data=cars)
+stargazer(reg1, reg2, reg3,
+          star.cutoffs=c(0.05, 0.01, 0.001), header=FALSE, decimal.mark = ",", table.layout ="c=t-s=n",
+          intercept.top = TRUE, dep.var.labels.include = FALSE, dep.var.caption = "", font.size = "Huge",
+          intercept.bottom = FALSE,  column.sep.width = "0.25pt", omit.stat=c("f", "ser"), single.row=TRUE,
+          column.labels = c("**Model 1**", "**Model 2**", "**Model 3**"),model.numbers=FALSE,
+          covariate.labels = c("**Intercepto**" ,"**Variable dummy 1**", "**Variable dummy 2**", "**Variable independiente 2**", 
+                               "**Variable independiente 3**",
+                               "**Variable independiente 4**", "**Variable independiente 5**"))
+```
+
+
+### Tabla regresión con gt
+
+```{r}
+library(tidyverse)
+library(modelsummary)
+library(gt)
+library(stats)
+library(flextable)
+cars <- force(mtcars)
+cars$cyl <- factor(cars$cyl,
+                   levels = c(4,6,8),
+                    labels = c("Cuatro", "Seis", "Ocho"))
+reg1<-lm(mpg ~ cyl,  data=cars)
+
+reg2<-lm(mpg ~ cyl + disp + hp , data=cars)
+
+reg3<-lm(mpg ~ cyl + disp + hp + 
+               drat + wt, data=cars)
+msummary(list(reg1, reg2, reg3), fmt = '%.2f', output="gt",
+         gof_omit = 'IC|Log|F', estimate = "{estimate}{stars} ({std.error})_aa_",
+         statistic=NULL, stars =c('*' = .05, '**' = .01, "***"=.001))  %>% as.data.frame()  %>% 
+  separate("Model 1", c("Model 1", "star1"), "_aa_") %>% 
+  separate("Model 2", c("Model 2", "star2"), "_aa_") %>% 
+  separate("Model 3", c("Model 3", "star3"), "_aa_") %>% 
+  select(-contains("star")) %>% rename("coef" = " ", "m1"="Model 1", "m2"="Model 2", "m3"="Model 3")  %>% 
+  slice(1:(n()-2)) %>%  
+  rbind(data.frame("coef"="N.Obs", 
+                   "m1"= nobs(reg1), "m2"= nobs(reg2), "m3" = nobs(reg3))) %>% 
+  rbind(msummary(list(reg1, reg2, reg3), fmt = '%.2f', output="gt",
+                 gof_omit = 'IC|Log|F') %>% as.data.frame() %>% slice((n()-1):(n())) %>% 
+          rename("coef" = " ", "m1"="Model 1", "m2"="Model 2", "m3"="Model 3")) %>% 
+  mutate(names=c("Constante", "Variable dummy 1", "Variable dummy 2", 
+                 "Variable independiente 2", "Variable independiente 3",
+                 "Variable independiente 4", "Variable independiente 5",
+                 "N.Obs", "R2", "R2 Aj.")) %>% select(-coef) %>% 
+  relocate(names, m1, m2, m3) %>% 
+  rename(" " = "names", "Modelo 1"="m1", "Modelo 2"="m2", "Modelo 3"="m3") %>% 
+  gt() %>% 
+  tab_source_note(md("**Nota:**  * p<0,05, ** p<0,01, ***p<0,001")) %>% 
+  tab_options( table_body.hlines.color = "white",
+               column_labels.border.top.color = "white",
+               column_labels.border.bottom.color = "black",
+               table.border.bottom.color="white",
+               table_body.border.bottom.color = "black",
+               column_labels.font.weight = "bold") %>% 
+  tab_style(locations = cells_body(rows = 8),
+            cell_borders(sides = "top", color = "#000000", style = "solid", weight = px(1))) %>% 
+  tab_style(locations = cells_body(columns=vars(" "), rows=1:7),
+            style=list(cell_text(weight="bold")))
+```
+
+
+### T-test (one sample)
