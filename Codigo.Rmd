@@ -407,7 +407,7 @@ test1 %>% gt() %>% cols_label(media1="Media\nFecha 1", n1="N \n Fecha 1",
 ```
 
 
-### T-test (paired samples). Tabla con varios test
+### T-test (paired samples). Tabla con varios test (Prueba muestra dependiente)
 
 ```{r}
 options(OutDec= ",")
@@ -512,7 +512,7 @@ test.todos<- rbind(test, test.hombre, test.mujer, test.joven, test.medio, test.v
 
 
 
-test.todos %>% gt() %>% fmt_markdown(columns=TRUE) %>% 
+test.todos %>% gt() %>% 
   cols_label(grupo=" ",media1="Media 1a Fecha", n1="N 1a Fecha", 
                               media2="Media 2a Fecha", n2="N 2a Fecha",
                               statistic="T de Student", p="P-Valor", sig="¿Significativo? (95%)" ) %>% 
@@ -528,5 +528,79 @@ test.todos %>% gt() %>% fmt_markdown(columns=TRUE) %>%
   tab_style(locations = cells_body(rows = 3),
             cell_borders(sides = "bottom", color = "#000000", style = "solid", weight = px(1)))
 
+```
+
+
+### T-test (Independent samples)
+
+
+```{r}
+options(OutDec= ",")
+library(rstatix)
+library(stats)
+library(tidyverse)
+library(gt)
+library(flextable)
+data <- data.frame(index=c(1:150), valor=round(rnorm(150, mean=4, sd=3),0),
+                   genero=sample(c("Hombres", "Mujeres"), 150, replace = TRUE),
+                   edad=rep(c("Jóvenes", "Media edad", "Viejos"), 50))
+
+hombre.media<- data %>% group_by(genero) %>% summarise(media=mean(valor)) %>% filter(genero=="Hombres")
+mujer.media<- data %>% group_by(genero) %>% summarise(media=mean(valor)) %>% filter(genero=="Mujeres")
+joven.media<- data %>% group_by(edad) %>% summarise(media=mean(valor)) %>% filter(edad=="Jóvenes")
+medio.media<- data %>% group_by(edad) %>% summarise(media=mean(valor)) %>% filter(edad=="Media edad")
+viejo.media<- data %>% group_by(edad) %>% summarise(media=mean(valor)) %>% filter(edad=="Viejos")
+
+## Primer test
+
+test1 <- data %>% t_test(valor ~ genero)
+
+test1 <-test1 %>%  mutate(media1=round(hombre.media$media,2), media2=round(mujer.media$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df) %>% 
+  relocate(group1, media1, n1, group2, media2, n2, statistic, p, sig)
+
+## Segundo test
+
+test2 <- data %>% filter(edad!="Viejos") %>%  t_test(valor ~ edad)
+
+test2 <-test2 %>%  mutate(media1=round(joven.media$media,2), media2=round(medio.media$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df) %>% 
+  relocate(group1, media1, n1, group2, media2, n2, statistic, p, sig)
+
+## Tercer test
+
+test3 <- data %>% filter(edad!="Media edad") %>%  t_test(valor ~ edad)
+
+test3 <-test3 %>%  mutate(media1=round(joven.media$media,2), media2=round(viejo.media$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df) %>% 
+  relocate(group1, media1, n1, group2, media2, n2, statistic, p, sig)
+
+## Cuarto test
+
+test4 <- data %>% filter(edad!="Jóvenes") %>%  t_test(valor ~ edad)
+
+test4 <-test4 %>%  mutate(media1=round(medio.media$media,2), media2=round(viejo.media$media,2),
+                          sig=case_when(p<=0.05 ~ "Sí", p>0.05 ~ "No"), statistic=round(statistic,2)) %>% 
+  select(-.y., -df) %>% 
+  relocate(group1, media1, n1, group2, media2, n2, statistic, p, sig)
+
+test.todos<- rbind(test1, test2, test3, test4)
+
+test.todos %>% gt() %>% 
+  cols_label(group1="Grupo 1",media1="Media", n1="N", group2="Grupo 2",
+                              media2="Media", n2="N",
+                              statistic="T de Student", p="P-Valor", sig="¿Significativo? (95%)") %>% 
+  cols_align(align="center", columns=TRUE) %>% 
+  tab_options(column_labels.font.weight = "bold",
+              column_labels.border.bottom.color = "black",
+              column_labels.border.top.color = "white",
+              table.border.bottom.color="white",
+              table_body.hlines.color = "white",
+               table_body.border.bottom.color = "white") %>% 
+  tab_style(locations = cells_body(rows = 1),
+            cell_borders(sides = "bottom", color = "#000000", style = "solid", weight = px(1)))
 ```
 
