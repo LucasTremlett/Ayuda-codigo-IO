@@ -8,6 +8,7 @@ output: html_document
 ```{r}
 install.packages("tidyverse")
 install.packages("stats")
+install.packages("maptools")
 install.packages("rtweet")
 install.packages("igraph")
 install.packages("leaflet")
@@ -602,5 +603,51 @@ test.todos %>% gt() %>%
                table_body.border.bottom.color = "white") %>% 
   tab_style(locations = cells_body(rows = 1),
             cell_borders(sides = "bottom", color = "#000000", style = "solid", weight = px(1)))
+```
+
+
+
+### Mapa comunidades España
+
+```{r}
+library(broom)
+library(RColorBrewer)
+library(scales)
+library(tidyverse)
+library(sf)
+library(here)
+library(rmapshaper)
+library(rgdal)
+setwd("~/Datos")
+shapefile<-readOGR(dsn = "comunidades_mapa/comunidades-autonomas-espanolas.shp") ##Descargar en https://public.opendatasoft.com/explore/dataset/comunidades-autonomas-espanolas/export/?sort=comunidade_autonoma
+dat <- tidy(shapefile)
+
+nombres <- tibble(shapefile$texto) %>% 
+  mutate(id = as.character(seq(0, nrow(.)-1))) %>% mutate(codigo=shapefile$codigo) 
+
+dat<- dat %>% left_join(nombres, by=c("id"="id")) %>% 
+   rename("texto"="shapefile$texto") %>% mutate(codigo=as.numeric(codigo))
+
+covid <- read.csv("https://raw.githubusercontent.com/datadista/datasets/master/COVID%2019/ccaa_covid19_ERTE.csv")
+
+dat <- dat %>% left_join(covid, by=c("codigo"="cod_ine"))
+
+dat <- dat %>% mutate(lat1=case_when(codigo==5 ~ lat + 6,
+                                     codigo!=5 ~ lat),
+                      long1=case_when(codigo==5 ~ long + 6,
+                                      codigo!=5 ~ long))
+
+dat %>% 
+  ggplot() +
+  geom_polygon(aes(x= long1, y = lat1, group=group, fill=media_mes_fuerza_mayor),
+               color="white") + coord_equal() + 
+  geom_rect(xmin=-12.35, xmax=-7.25, ymin=33.5, ymax=35.4, color="black", alpha=0,
+            size=1.25) +
+  theme_void() + 
+  theme(legend.text.align = 0,
+    legend.position = "bottom") +
+  labs(fill="Ertes por Comunidad") + 
+  guides(fill = guide_colourbar(barwidth = 21))+ 
+  scale_fill_gradient(low = "royalblue4", high = "firebrick4", labels=number)
 ```
 
