@@ -606,6 +606,34 @@ test.todos %>% gt() %>%
 ```
 
 
+### Anova + Test Post Hoc
+
+```{r}
+options(OutDec= ",")
+library(rstatix)
+library(stats)
+library(tidyverse)
+library(gt)
+library(flextable)
+
+data <- force(iris)
+data
+
+test.anova <- data %>% rename("Longitud"="Sepal.Length", "Tipo"="Species") %>% 
+  anova_test(Longitud ~ Tipo)
+
+
+## Post-hoc para cuando la N de los grupos es similar y la varianza es similar
+
+post.hoc.tukey <- data %>% rename("Longitud"="Sepal.Length", "Tipo"="Species") %>% 
+  tukey_hsd(Longitud ~ Tipo, detailed=TRUE) 
+
+## Post-hoc para cuando la N de los grupos es diferente y varianza es diferente
+
+post.hoc.games <- data %>% rename("Longitud"="Sepal.Length", "Tipo"="Species") %>% 
+  games_howell_test(Longitud ~ Tipo)
+```
+
 
 ### Mapa comunidades España
 
