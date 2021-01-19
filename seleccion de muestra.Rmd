@@ -1,0 +1,66 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+
+```{r}
+library(readxl)
+targets <- read_excel("muestra_ejemplo.xlsx") %>%  rename("m35_44"="m5_44")
+
+targets<- targets %>% pivot_longer(c("h18_24","h25_34", "h35_44", "h45-54", "h55_70",
+                                   "m18_24","m25_34", "m35_44", "m45_54", "m55_70"),
+                                 names_to="grupo", values_to="total") %>% 
+  separate(grupo, c("sexo", "edad"), sep=1) %>%
+  mutate(porc=total/sum(total),
+         sexo=case_when(sexo=="h" ~ "Hombre",
+                        sexo=="m" ~ "Mujer")) %>% 
+  rename("ccaa"="com_min")
+
+targets$ccaa = substr(targets$ccaa,1,nchar(targets$ccaa)-1)
+ 
+targets %>% select(ccaa, sexo, edad, porc)
+```
+
+
+
+```{r}
+panel <- read_excel("panel sondea.xlsx")
+panel <- panel %>% select(ID, Sexo, Edad, CCAA) %>% 
+  rename("sexo"="Sexo", "ccaa"="CCAA", "edad"="Edad") %>% 
+  mutate(edad=as.character(edad)) %>% 
+  separate(edad, c("edad", "fuera"),sep=2) %>% select(-fuera) %>% 
+  mutate(edad=as.numeric(edad))%>% 
+  mutate(edad=case_when(edad >= 17 & edad <= 24 ~ "18_24",
+                        edad >= 25 & edad <= 34 ~ "25_34",
+                        edad >= 35 & edad <= 44 ~ "35_44",
+                        edad >= 45 & edad <= 54 ~ "45_54",
+                        edad >= 55  ~ "55-70"))
+
+panel
+
+```
+
+
+```{r}
+
+panel %>% select(ID, Sexo, Edad, CCAA) %>% 
+  rename("sexo"="Sexo", "ccaa"="CCAA", "edad"="Edad") %>% 
+  mutate(edi=as.character(edad)) %>% 
+  separate(edi, c("edi", "fuera"),sep=2) %>% select(-fuera) %>% 
+  mutate(edi=as.numeric(edi))%>% 
+  mutate(edi=case_when(edi >= 17 & edi <= 24 ~ "18_24",
+                        edi >= 25 & edi <= 34 ~ "25_34",
+                        edi >= 35 & edi <= 44 ~ "35_44",
+                        edi >= 45 & edi <= 54 ~ "45_54",
+                        edi >= 55  ~ "55-70"))
+
+
+
+```
+
+
+```{r}
+library(fif)
+```
+

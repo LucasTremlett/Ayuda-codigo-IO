@@ -6,7 +6,12 @@ output: html_document
 ### Librerias
 
 ```{r}
+install.packages("devtools")
 install.packages("tidyverse")
+install.packages("shiny")
+install.packages("ggiraph")
+install.packages("quantmod")
+install.packages("plotly")
 install.packages("stats")
 install.packages("maptools")
 install.packages("rtweet")
@@ -19,7 +24,7 @@ install.packages("tm")
 install.packages("quantmod")
 install.packages("rgdal")
 install.packages("stargazer")
-install.packages("olsrr")
+install.packages("kimiscr")
 install.packages("nlme")
 install.packages("gmodels")
 install.packages("psych")
